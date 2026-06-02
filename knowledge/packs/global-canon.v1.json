@@ -1,0 +1,30 @@
+{
+  "id": "global-canon",
+  "name": "Global Canon Knowledge Pack",
+  "version": "1.0",
+  "description": "Operational governance rules for safe AI execution in Agente Setimmo.",
+  "sourceIds": ["global-canon"],
+  "generatedBy": "Agente Setimmo",
+  "generatedAtUtc": "2026-05-22T00:00:00Z",
+  "entries": [
+    {
+      "id": "global.canon.supreme-directive",
+      "title": "Diretriz Suprema",
+      "category": "governance",
+      "topic": "global canon safety",
+      "summary": "Before innovating, preserve; before changing, understand; before executing, validate; before concluding, prove.",
+      "details": "The Global Canon blocks actions that break, overwrite, remove, weaken, or compromise existing working behavior. It requires scope clarity, read-only defaults, dry-run and diff where applicable, sensitive-data protection, and a final evidence report.",
+      "appliesTo": "Agente Setimmo CLI, MCP, AI workflows",
+      "entityTypes": [],
+      "filePatterns": [],
+      "sourceIds": ["global-canon"],
+      "sourceRefs": ["agent://docs/CANONE_GLOBAL_DE_REGRAS.md"],
+      "confidence": "authoritative",
+      "warnings": ["safeForApply is always false in this version."],
+      "relatedEntries": ["ragnaforge.gov.readonly"],
+      "tags": ["governance", "safety", "canon", "read-only"],
+      "version": "1.0",
+      "lastReviewedUtc": "2026-05-22T00:00:00Z"
+    }
+  ]
+}

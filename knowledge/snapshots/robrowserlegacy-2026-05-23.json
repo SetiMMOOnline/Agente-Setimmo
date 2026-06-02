@@ -1,0 +1,23 @@
+{
+  "id": "robrowserlegacy-2026-05-23",
+  "sourceId": "robrowserlegacy",
+  "sourceVersion": "0842fa67508d536ec359c12e8f17ca5c4b6a85ef",
+  "retrievedAt": "2026-05-23T00:00:00Z",
+  "reviewedAt": "2026-05-23T00:00:00Z",
+  "reviewedBy": "Agente Setimmo",
+  "status": "validated",
+  "summary": "Public GitHub metadata recorded for MrAntares/roBrowserLegacy: default branch master, latest commit 0842fa67508d, GPL-3.0 declared, top-level structure includes applications, doc, src, tests, and vite.",
+  "metadataHash": "0842fa67508d536ec359c12e8f17ca5c4b6a85ef",
+  "contentHash": "0842fa67508d536ec359c12e8f17ca5c4b6a85ef",
+  "updateDetected": true,
+  "provenance": "authorized-github-reference",
+  "sanitized": true,
+  "rawStored": false,
+  "canPromoteToKnowledgeCandidates": true,
+  "licenseNotes": "GPL-3.0",
+  "authorizedUseNotes": "User-reported authorization covers analysis, adapter design, and selective incorporation with provenance.",
+  "warnings": [
+    "No raw repository clone committed.",
+    "No source code copied in this stage."
+  ]
+}

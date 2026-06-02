@@ -1,0 +1,30 @@
+{
+  "id": "ratemyserver-reference",
+  "name": "RateMyServer Internal Reference Library",
+  "version": "1.0",
+  "description": "Small curated read-only reference hints for RateMyServer provenance and usage policy.",
+  "sourceIds": ["ratemyserver"],
+  "generatedBy": "Agente Setimmo",
+  "generatedAtUtc": "2026-05-22T00:00:00Z",
+  "entries": [
+    {
+      "id": "ratemyserver.reference.policy",
+      "title": "RateMyServer Reference Policy",
+      "category": "external-reference",
+      "topic": "ratemyserver provenance",
+      "summary": "RateMyServer is registered as an internal read-only reference source, not as a live adapter.",
+      "details": "Use RateMyServer only as external context for manual triage, hints, explanations, or comparison. It does not replace local project data, rAthena data, or validated internal knowledge. No crawler, scraper, downloader, HTML dump, cache sync, login, or API key is implemented.",
+      "appliesTo": "item, monster, map, npc, skill, quest",
+      "entityTypes": ["item", "monster", "map", "npc", "skill", "quest"],
+      "filePatterns": [],
+      "sourceIds": ["ratemyserver"],
+      "sourceRefs": ["https://ratemyserver.net/"],
+      "confidence": "informative",
+      "warnings": ["External references can produce hints or warnings only; local data has priority."],
+      "relatedEntries": [],
+      "tags": ["ratemyserver", "reference", "no-network", "provenance"],
+      "version": "1.0",
+      "lastReviewedUtc": "2026-05-22T00:00:00Z"
+    }
+  ]
+}

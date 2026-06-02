@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "safeForProductionApplyDefault": false,
+  "requiresHumanApproval": true,
+  "requiresDiffHashMatch": true,
+  "requiresRollbackPlan": true,
+  "requiresAuditTrail": true,
+  "requiresCodexReview": true,
+  "allowedEnvironments": [
+    "local",
+    "development",
+    "staging",
+    "production"
+  ],
+  "production": {
+    "allowAutoApprove": false,
+    "maxRiskLevel": "medium"
+  }
+}

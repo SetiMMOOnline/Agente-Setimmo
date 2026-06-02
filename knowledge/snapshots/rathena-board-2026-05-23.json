@@ -1,0 +1,24 @@
+{
+  "id": "rathena-board-2026-05-23",
+  "sourceId": "rathena-board",
+  "sourceVersion": "policy-2026-05-23",
+  "retrievedAt": "2026-05-23T00:00:00Z",
+  "reviewedAt": "2026-05-23T00:00:00Z",
+  "reviewedBy": "Agente Setimmo",
+  "status": "validated",
+  "summary": "Forum source registered with metadata-only policy. Live homepage/topic crawling was not enabled; refresh remains skipped_by_policy unless robots/terms and behavior are explicitly cleared.",
+  "metadataHash": "policy-2026-05-23",
+  "contentHash": "policy-2026-05-23",
+  "updateDetected": false,
+  "provenance": "community-reference-metadata",
+  "sanitized": true,
+  "rawStored": false,
+  "canPromoteToKnowledgeCandidates": true,
+  "licenseNotes": "Forum terms apply; metadata-only summaries are curated locally.",
+  "authorizedUseNotes": "Allowed for metadata summaries and routing hints only.",
+  "warnings": [
+    "No raw HTML stored.",
+    "No forum posts copied.",
+    "No crawler or pagination enabled."
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "divine-pride-reference",
+  "name": "Divine Pride Internal Reference Library",
+  "version": "1.0",
+  "description": "Small curated read-only reference hints for Divine Pride provenance and usage policy.",
+  "sourceIds": ["divine-pride"],
+  "generatedBy": "Agente Setimmo",
+  "generatedAtUtc": "2026-05-22T00:00:00Z",
+  "entries": [
+    {
+      "id": "divine-pride.reference.policy",
+      "title": "Divine Pride Reference Policy",
+      "category": "external-reference",
+      "topic": "divine pride provenance",
+      "summary": "Divine Pride is registered as an internal read-only reference source, not as a live adapter.",
+      "details": "Use Divine Pride only as external context for manual triage, hints, explanations, or comparison. It does not replace local project data, rAthena data, or validated internal knowledge. No crawler, scraper, downloader, HTML dump, cache sync, login, or API key is implemented.",
+      "appliesTo": "item, monster, map, npc, skill, quest",
+      "entityTypes": ["item", "monster", "map", "npc", "skill", "quest"],
+      "filePatterns": [],
+      "sourceIds": ["divine-pride"],
+      "sourceRefs": ["https://www.divine-pride.net/"],
+      "confidence": "informative",
+      "warnings": ["External references can produce hints or warnings only; local data has priority."],
+      "relatedEntries": [],
+      "tags": ["divine-pride", "reference", "no-network", "provenance"],
+      "version": "1.0",
+      "lastReviewedUtc": "2026-05-22T00:00:00Z"
+    }
+  ]
+}

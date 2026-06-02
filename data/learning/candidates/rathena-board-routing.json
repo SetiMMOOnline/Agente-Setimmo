@@ -1,0 +1,31 @@
+{
+  "id": "learning-rathena-board-routing",
+  "sourceId": "rathena-board",
+  "topic": "community routing",
+  "summary": "Candidate note: rAthena Board should remain metadata-only and can route human review toward support, database, scripting, source, client-side, or third-party sections without copying posts.",
+  "status": "needs_review",
+  "category": "community-reference",
+  "entityTypes": ["item", "equipment", "monster", "npc", "map", "skill", "quest"],
+  "tags": ["community", "routing", "support", "database", "scripting", "third-party"],
+  "evidence": [
+    {
+      "sourceId": "rathena-board",
+      "snapshotId": "rathena-board-2026-05-23",
+      "referenceUrl": "https://rathena.org/board/",
+      "summary": "Policy snapshot keeps the board as metadata-only and review-first.",
+      "retrievedAt": "2026-05-23T00:00:00Z"
+    }
+  ],
+  "licenseNotes": "Forum terms apply; metadata-only summaries are curated locally.",
+  "authorizedUseNotes": "Allowed for metadata summaries and routing hints only.",
+  "humanReviewRequired": true,
+  "rawHtmlStored": false,
+  "secretStored": false,
+  "canBlock": false,
+  "safeForApply": false,
+  "createdAt": "2026-05-23T00:00:00Z",
+  "proposedPackId": "rathena-board-reference",
+  "changelog": [
+    "2026-05-23: Candidate created from policy snapshot without live forum crawling."
+  ]
+}

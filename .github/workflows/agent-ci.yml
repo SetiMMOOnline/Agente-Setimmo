@@ -1,0 +1,29 @@
+name: Agente Setimmo CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test-package:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: dotnet build RagnaForge.Agent.slnx
+
+      - name: Test
+        run: dotnet test RagnaForge.Agent.slnx --no-build
+
+      - name: Package clean
+        shell: pwsh
+        run: ./scripts/package-clean.ps1 -OutputZip "$env:RUNNER_TEMP/Agente_Setimmo_release.zip"

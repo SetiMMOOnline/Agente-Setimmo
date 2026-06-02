@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "precedence": [
+    "explicitBlocked",
+    "secretOrSensitive",
+    "productionApproval",
+    "directoryPolicy",
+    "fileTypePolicy",
+    "languagePolicy"
+  ],
+  "directories": {
+    "allowed": [
+      "src",
+      "tests",
+      "docs",
+      "knowledge",
+      "context-packs"
+    ],
+    "readOnly": [
+      "dist",
+      "cache",
+      "logs",
+      "reports"
+    ],
+    "blocked": [
+      ".git",
+      "node_modules",
+      "bin",
+      "obj",
+      "TestResults"
+    ],
+    "productionApprovalRequired": [
+      "src",
+      "config"
+    ]
+  }
+}

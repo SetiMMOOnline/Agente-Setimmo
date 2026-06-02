@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "originalGrfWriteAllowed": false,
+  "lubEditingAllowed": false,
+  "metadataOnlyByDefault": true,
+  "requiresOutputRoot": true,
+  "requiresManifest": true,
+  "requiresAuditTrail": true,
+  "blockedExtensions": [
+    ".grf",
+    ".gpf",
+    ".thor",
+    ".lub"
+  ]
+}

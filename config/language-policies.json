@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "languages": {
+    "csharp": { "risk": "medium", "requiresCodexReview": true },
+    "javascript": { "risk": "medium", "requiresCodexReview": true },
+    "typescript": { "risk": "medium", "requiresCodexReview": true },
+    "python": { "risk": "medium", "requiresCodexReview": true },
+    "lua": { "risk": "medium", "requiresCodexReview": true },
+    "powershell": { "risk": "high", "requiresCodexReview": true },
+    "shell": { "risk": "high", "requiresCodexReview": true },
+    "markdown": { "risk": "low", "requiresCodexReview": false },
+    "json": { "risk": "medium", "requiresCodexReview": true }
+  }
+}

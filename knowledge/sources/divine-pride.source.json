@@ -1,0 +1,21 @@
+{
+  "id": "divine-pride",
+  "name": "Divine Pride Reference Library",
+  "description": "Curated internal metadata for using Divine Pride as a read-only external reference during manual triage.",
+  "sourceType": "internal_reference_library",
+  "url": "https://www.divine-pride.net/",
+  "externalReferenceUrl": "https://www.divine-pride.net/",
+  "provenance": "external-reference-registered-locally",
+  "license": "External site terms apply; no dump or copied database is bundled.",
+  "permissionNote": "Metadata-only provenance. No scraping, crawler, downloader, HTML dump, or internet dependency is implemented.",
+  "lastReviewedUtc": "2026-05-22T00:00:00Z",
+  "trustLevel": "informative",
+  "readOnly": true,
+  "allowedUse": "knowledge hints, manual comparison, external issue triage, progression evaluation context.",
+  "supportedEntityTypes": ["item", "monster", "map", "npc", "skill", "quest"],
+  "trustPolicy": "External reference only. Not absolute truth. Local project, rAthena, and validated internal data have priority.",
+  "conflictPolicy": "When conflicting with local data, prefer local/rAthena/project data and report the external source only as context or warning.",
+  "updatePolicy": "Manual curated metadata update only. No automatic online sync in this version.",
+  "notes": "Small sanitized examples only. No copied pages, no mass HTML, no external dump.",
+  "schemaVersion": "1.0"
+}

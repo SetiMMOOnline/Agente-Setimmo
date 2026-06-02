@@ -1,0 +1,29 @@
+{
+  "id": "global-canon",
+  "name": "Cânone Global de Regras",
+  "sourceType": "internal_governance",
+  "url": "agent://docs/CANONE_GLOBAL_DE_REGRAS.md",
+  "externalReferenceUrl": null,
+  "provenance": "local",
+  "license": "Proprietary",
+  "permissionNote": "Internal governance document. Read-only operational policy for AI executors and reviewers.",
+  "lastReviewedUtc": "2026-05-22T00:00:00Z",
+  "trustLevel": "high",
+  "readOnly": true,
+  "allowedUse": "governance, safety validation, scope checks, destructive-command checks, reporting gates.",
+  "supportedTopics": [
+    "governance",
+    "safety",
+    "validation",
+    "scope",
+    "destructive-commands",
+    "sensitive-files",
+    "reporting",
+    "git",
+    "testing",
+    "rollback-policy",
+    "apply-policy"
+  ],
+  "notes": "Local canon. It does not permit real apply or real rollback.",
+  "schemaVersion": "1.0"
+}

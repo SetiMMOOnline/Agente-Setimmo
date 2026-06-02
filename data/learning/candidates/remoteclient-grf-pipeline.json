@@ -1,0 +1,31 @@
+{
+  "id": "learning-remoteclient-grf-pipeline",
+  "sourceId": "robrowserlegacy-remoteclient-js",
+  "topic": "grf pipeline",
+  "summary": "Candidate note: RemoteClient-JS documents DATA.INI loading, GRF indexing, cache warm-up, cache headers, and CP949/EUC-KR path handling for browser asset delivery.",
+  "status": "needs_review",
+  "category": "authorized-code-reference",
+  "entityTypes": ["item", "equipment", "monster", "npc", "map"],
+  "tags": ["grf-assets", "data-ini", "encoding", "cache", "asset-index", "browser-play"],
+  "evidence": [
+    {
+      "sourceId": "robrowserlegacy-remoteclient-js",
+      "snapshotId": "robrowserlegacy-remoteclient-js-2026-05-23",
+      "referenceUrl": "https://github.com/FranciscoWallison/roBrowserLegacy-RemoteClient-JS",
+      "summary": "README lists unified mode, GRF file indexing, LRU cache, cache warm-up, HTTP cache headers, and Korean filename encoding support.",
+      "retrievedAt": "2026-05-23T00:00:00Z"
+    }
+  ],
+  "licenseNotes": "none-declared",
+  "authorizedUseNotes": "Authorized by user report for analysis, adapter design, and selective incorporation with provenance.",
+  "humanReviewRequired": true,
+  "rawHtmlStored": false,
+  "secretStored": false,
+  "canBlock": false,
+  "safeForApply": false,
+  "createdAt": "2026-05-23T00:00:00Z",
+  "proposedPackId": "robrowserlegacy-remoteclient-js",
+  "changelog": [
+    "2026-05-23: Candidate created from sanitized GitHub metadata and README summary."
+  ]
+}

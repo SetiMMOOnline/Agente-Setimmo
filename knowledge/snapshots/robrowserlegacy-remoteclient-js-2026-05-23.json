@@ -1,0 +1,23 @@
+{
+  "id": "robrowserlegacy-remoteclient-js-2026-05-23",
+  "sourceId": "robrowserlegacy-remoteclient-js",
+  "sourceVersion": "d93044ea1010337756be439a39e9bbaffd7fedf2",
+  "retrievedAt": "2026-05-23T00:00:00Z",
+  "reviewedAt": "2026-05-23T00:00:00Z",
+  "reviewedBy": "Agente Setimmo",
+  "status": "validated",
+  "summary": "Public GitHub metadata recorded for FranciscoWallison/roBrowserLegacy-RemoteClient-JS: default branch main, latest commit d93044ea1010, no license declared in API metadata, top-level structure includes data, resources, src, tools, and startup utilities.",
+  "metadataHash": "d93044ea1010337756be439a39e9bbaffd7fedf2",
+  "contentHash": "d93044ea1010337756be439a39e9bbaffd7fedf2",
+  "updateDetected": true,
+  "provenance": "authorized-github-reference",
+  "sanitized": true,
+  "rawStored": false,
+  "canPromoteToKnowledgeCandidates": true,
+  "licenseNotes": "none-declared",
+  "authorizedUseNotes": "User-reported authorization covers analysis, adapter design, and selective incorporation with provenance.",
+  "warnings": [
+    "No raw repository clone committed.",
+    "No source code copied in this stage."
+  ]
+}

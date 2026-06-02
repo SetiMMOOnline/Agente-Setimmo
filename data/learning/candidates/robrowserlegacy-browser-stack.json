@@ -1,0 +1,31 @@
+{
+  "id": "learning-robrowserlegacy-browser-stack",
+  "sourceId": "robrowserlegacy",
+  "topic": "browser stack",
+  "summary": "Candidate note: roBrowserLegacy documents Vite, WebGL, wsProxy, and Web Workers as a browser-client stack that can inform future RagnaForge browser adapter planning.",
+  "status": "needs_review",
+  "category": "authorized-code-reference",
+  "entityTypes": ["item", "equipment", "monster", "npc", "map"],
+  "tags": ["browser-client", "vite", "webgl", "wsproxy", "worker", "pathfinding"],
+  "evidence": [
+    {
+      "sourceId": "robrowserlegacy",
+      "snapshotId": "robrowserlegacy-2026-05-23",
+      "referenceUrl": "https://github.com/MrAntares/roBrowserLegacy",
+      "summary": "README lists Vite, WebGL, WebSockets via wsProxy, and Web Workers for GRF decompression and pathfinding.",
+      "retrievedAt": "2026-05-23T00:00:00Z"
+    }
+  ],
+  "licenseNotes": "GPL-3.0",
+  "authorizedUseNotes": "Authorized by user report for analysis, adapter design, and selective incorporation with provenance.",
+  "humanReviewRequired": true,
+  "rawHtmlStored": false,
+  "secretStored": false,
+  "canBlock": false,
+  "safeForApply": false,
+  "createdAt": "2026-05-23T00:00:00Z",
+  "proposedPackId": "robrowserlegacy",
+  "changelog": [
+    "2026-05-23: Candidate created from sanitized GitHub metadata and README summary."
+  ]
+}

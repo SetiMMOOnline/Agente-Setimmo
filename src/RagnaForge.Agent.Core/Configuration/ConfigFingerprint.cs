@@ -36,6 +36,7 @@ public static class ConfigFingerprint
             ["readOnlyRoots"] = profile.ReadOnlyRoots,
             ["blockOriginalGrfWrite"] = safetyConfig.BlockOriginalGrfWrite,
             ["blockLubEditing"] = safetyConfig.BlockLubEditing,
+            ["operationProfile"] = safetyConfig.GetNormalizedOperationProfile(),
             ["requireDryRunBeforeApply"] = safetyConfig.RequireDryRunBeforeApply,
             ["requireDiffBeforeApply"] = safetyConfig.RequireDiffBeforeApply,
             ["requireExplicitConfirmation"] = safetyConfig.RequireExplicitConfirmation,

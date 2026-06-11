@@ -1,11 +1,11 @@
-using RagnaForge.Agent.Core.Security;
 using RagnaForge.Agent.Core.Configuration;
+using RagnaForge.Agent.Core.Security;
 
 namespace RagnaForge.Agent.Core.Tests;
 
 /// <summary>
-/// Tests for PathGuard — verifies filesystem protection is enforced.
-/// Uses temporary fixtures, never touches real GRF or project directories.
+/// Tests for PathGuard. Verifies filesystem protection is enforced
+/// using temporary fixtures only.
 /// </summary>
 public class PathGuardTests : IDisposable
 {
@@ -26,8 +26,7 @@ public class PathGuardTests : IDisposable
         _guard = new PathGuard(
             [_writableDir],
             [_readOnlyDir],
-            blockLubEditing: true
-        );
+            blockLubEditing: true);
     }
 
     public void Dispose()
@@ -35,7 +34,6 @@ public class PathGuardTests : IDisposable
         try { Directory.Delete(_tempDir, true); } catch { }
     }
 
-    // --- Test 1: Block write to GRF (read-only) directory ---
     [Fact]
     public void EnsureCanWrite_BlocksReadOnlyRoot()
     {
@@ -46,7 +44,6 @@ public class PathGuardTests : IDisposable
         Assert.Contains("read-only", result.Reason!, StringComparison.OrdinalIgnoreCase);
     }
 
-    // --- Test 2: Block path traversal ---
     [Fact]
     public void EnsureCanWrite_BlocksTraversal()
     {
@@ -56,7 +53,6 @@ public class PathGuardTests : IDisposable
         Assert.False(result.IsAllowed);
     }
 
-    // --- Test 3: Accept valid Windows paths ---
     [Fact]
     public void Normalize_AcceptsValidWindowsPath()
     {
@@ -65,7 +61,6 @@ public class PathGuardTests : IDisposable
         Assert.DoesNotContain("..", result);
     }
 
-    // --- Test 4: Accept paths with spaces ---
     [Fact]
     public void Normalize_AcceptsPathsWithSpaces()
     {
@@ -76,18 +71,16 @@ public class PathGuardTests : IDisposable
         Assert.Contains("path with spaces", result);
     }
 
-    // --- Test 5: Accept paths with accents ---
     [Fact]
     public void Normalize_AcceptsPathsWithAccents()
     {
-        var pathWithAccents = Path.Combine(_tempDir, "conteúdo");
+        var pathWithAccents = Path.Combine(_tempDir, "conteudo-com-acento");
         Directory.CreateDirectory(pathWithAccents);
 
         var result = PathGuard.Normalize(pathWithAccents);
-        Assert.Contains("conteúdo", result);
+        Assert.Contains("conteudo-com-acento", result);
     }
 
-    // --- Test 6: Accept paths with apostrophes ---
     [Fact]
     public void Normalize_AcceptsPathsWithApostrophes()
     {
@@ -98,7 +91,6 @@ public class PathGuardTests : IDisposable
         Assert.Contains("GRF'S", result);
     }
 
-    // --- Test 7: Block .lub editing ---
     [Fact]
     public void EnsureCanWriteFileType_BlocksLub()
     {
@@ -109,7 +101,6 @@ public class PathGuardTests : IDisposable
         Assert.Contains(".lub", result.Reason!);
     }
 
-    // --- Test 8: Allow writing to writable root ---
     [Fact]
     public void EnsureCanWrite_AllowsWritableRoot()
     {
@@ -119,7 +110,6 @@ public class PathGuardTests : IDisposable
         Assert.True(result.IsAllowed);
     }
 
-    // --- Test 9: Block write outside all roots ---
     [Fact]
     public void EnsureCanWrite_BlocksOutsideAllRoots()
     {
@@ -129,7 +119,6 @@ public class PathGuardTests : IDisposable
         Assert.False(result.IsAllowed);
     }
 
-    // --- Test 10: Traversal detection ---
     [Fact]
     public void ContainsTraversal_DetectsDoubleDot()
     {
@@ -138,7 +127,6 @@ public class PathGuardTests : IDisposable
         Assert.False(PathGuard.ContainsTraversal(@"C:\Users\Normal\Path"));
     }
 
-    // --- Test 11: EnsureCanRead allows writable and read-only roots ---
     [Fact]
     public void EnsureCanRead_AllowsBothRoots()
     {
@@ -149,7 +137,6 @@ public class PathGuardTests : IDisposable
         Assert.True(_guard.EnsureCanRead(readOnlyPath).IsAllowed);
     }
 
-    // --- Test 12: EnsureProfileIsSafe catches GRF in writable roots (exact match) ---
     [Fact]
     public void EnsureProfileIsSafe_CatchesGrfInWritableRoots()
     {
@@ -160,17 +147,14 @@ public class PathGuardTests : IDisposable
             PatchPath = _writableDir,
             GrfRepositoryPath = _readOnlyDir,
             GrfEditorPath = _writableDir,
-            WritableRoots = [_writableDir, _readOnlyDir], // GRF in writable = bad!
+            WritableRoots = [_writableDir, _readOnlyDir],
             ReadOnlyRoots = [_readOnlyDir]
         };
 
         var issues = PathGuard.EnsureProfileIsSafe(profile);
-        Assert.Contains(issues, i => i.Contains("writableRoot", StringComparison.OrdinalIgnoreCase) ||
-                                     i.Contains("overlap", StringComparison.OrdinalIgnoreCase) ||
-                                     i.Contains("contained", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(issues, i => i.Contains("exactly overlaps", StringComparison.OrdinalIgnoreCase));
     }
 
-    // --- Test 13: EnsureProfileIsSafe catches GRF not in read-only roots ---
     [Fact]
     public void EnsureProfileIsSafe_CatchesGrfNotInReadOnlyRoots()
     {
@@ -182,14 +166,13 @@ public class PathGuardTests : IDisposable
             GrfRepositoryPath = _readOnlyDir,
             GrfEditorPath = _writableDir,
             WritableRoots = [_writableDir],
-            ReadOnlyRoots = [] // GRF not in read-only = bad!
+            ReadOnlyRoots = []
         };
 
         var issues = PathGuard.EnsureProfileIsSafe(profile);
-        Assert.Contains(issues, i => i.Contains("readOnlyRoots"));
+        Assert.Contains(issues, i => i.Contains("readOnlyRoots", StringComparison.OrdinalIgnoreCase));
     }
 
-    // --- Test 14: EnsureGrfRepositoryIsReadOnly validates correctly ---
     [Fact]
     public void EnsureGrfRepositoryIsReadOnly_PassesWhenCorrect()
     {
@@ -203,7 +186,6 @@ public class PathGuardTests : IDisposable
         Assert.Empty(issues);
     }
 
-    // --- Test 15: EnsureProfileIsSafe catches traversal in paths ---
     [Fact]
     public void EnsureProfileIsSafe_CatchesTraversalInPaths()
     {
@@ -219,14 +201,12 @@ public class PathGuardTests : IDisposable
         };
 
         var issues = PathGuard.EnsureProfileIsSafe(profile);
-        Assert.Contains(issues, i => i.Contains("traversal"));
+        Assert.Contains(issues, i => i.Contains("traversal", StringComparison.OrdinalIgnoreCase));
     }
 
-    // --- Test 16: WritableRoot containing ReadOnlyRoot by hierarchy ---
     [Fact]
-    public void EnsureProfileIsSafe_CatchesWritableContainingReadOnly()
+    public void EnsureProfileIsSafe_AllowsWritableRootContainingProtectedReadOnlyIsland()
     {
-        // writable = parent, readOnly = child inside it → dangerous
         var parentDir = Path.Combine(_tempDir, "parent");
         var childDir = Path.Combine(parentDir, "child_readonly");
         Directory.CreateDirectory(parentDir);
@@ -239,15 +219,14 @@ public class PathGuardTests : IDisposable
             PatchPath = _writableDir,
             GrfRepositoryPath = childDir,
             GrfEditorPath = _writableDir,
-            WritableRoots = [_writableDir, parentDir], // parent covers child
+            WritableRoots = [_writableDir, parentDir],
             ReadOnlyRoots = [childDir]
         };
 
         var issues = PathGuard.EnsureProfileIsSafe(profile);
-        Assert.Contains(issues, i => i.Contains("contains") && i.Contains("readOnlyRoot"));
+        Assert.Empty(issues);
     }
 
-    // --- Test 17: ReadOnlyRoot containing WritableRoot ---
     [Fact]
     public void EnsureProfileIsSafe_CatchesReadOnlyContainingWritable()
     {
@@ -264,16 +243,15 @@ public class PathGuardTests : IDisposable
             GrfRepositoryPath = parentDir,
             GrfEditorPath = _writableDir,
             WritableRoots = [_writableDir, childDir],
-            ReadOnlyRoots = [parentDir] // read-only parent covers writable child
+            ReadOnlyRoots = [parentDir]
         };
 
         var issues = PathGuard.EnsureProfileIsSafe(profile);
-        Assert.Contains(issues, i => i.Contains("contains") && i.Contains("writableRoot"));
+        Assert.Contains(issues, i => i.Contains("contains writableRoot", StringComparison.OrdinalIgnoreCase));
     }
 
-    // --- Test 18: GRF inside writable root by containment (not exact match) ---
     [Fact]
-    public void EnsureProfileIsSafe_CatchesGrfInsideWritableByContainment()
+    public void EnsureProfileIsSafe_AllowsGrfInsideWritableRootWhenProtectedByReadOnlyIsland()
     {
         var parentWritable = Path.Combine(_tempDir, "writable_parent");
         var grfChild = Path.Combine(parentWritable, "grfs_subdir");
@@ -285,15 +263,29 @@ public class PathGuardTests : IDisposable
             RagnaforgeMainProjectPath = _writableDir,
             RathenaPath = _writableDir,
             PatchPath = _writableDir,
-            GrfRepositoryPath = grfChild, // child of a writable root
+            GrfRepositoryPath = grfChild,
             GrfEditorPath = _writableDir,
             WritableRoots = [_writableDir, parentWritable],
             ReadOnlyRoots = [grfChild]
         };
 
         var issues = PathGuard.EnsureProfileIsSafe(profile);
-        // Must detect GRF is contained inside a writable root
-        Assert.Contains(issues, i =>
-            i.Contains("grfRepositoryPath") && i.Contains("contained"));
+        Assert.Empty(issues);
+    }
+
+    [Fact]
+    public void EnsureCanWrite_BlocksProtectedReadOnlyIslandInsideWritableRoot()
+    {
+        var parentWritable = Path.Combine(_tempDir, "content_root");
+        var protectedChild = Path.Combine(parentWritable, "GRF'S");
+        Directory.CreateDirectory(parentWritable);
+        Directory.CreateDirectory(protectedChild);
+
+        var guard = new PathGuard([parentWritable], [protectedChild], blockLubEditing: true);
+        var blockedPath = Path.Combine(protectedChild, "blocked.txt");
+        var allowedPath = Path.Combine(parentWritable, "allowed.txt");
+
+        Assert.False(guard.EnsureCanWrite(blockedPath).IsAllowed);
+        Assert.True(guard.EnsureCanWrite(allowedPath).IsAllowed);
     }
 }

@@ -112,4 +112,19 @@ public class ConfigFingerprintTests
         Assert.Equal(64, fp.Length); // SHA-256 = 64 hex chars
         Assert.True(fp.All(c => "0123456789abcdef".Contains(c)));
     }
+
+    [Fact]
+    public void Fingerprint_ChangesWhenOperationProfileChanges()
+    {
+        var strict = CreateSafetyConfig();
+        strict.OperationProfile = "strict";
+
+        var localDev = CreateSafetyConfig();
+        localDev.OperationProfile = "local-dev";
+
+        var fp1 = ConfigFingerprint.Generate(CreatePathsConfig(), strict);
+        var fp2 = ConfigFingerprint.Generate(CreatePathsConfig(), localDev);
+
+        Assert.NotEqual(fp1, fp2);
+    }
 }

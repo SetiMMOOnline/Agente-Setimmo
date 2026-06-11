@@ -101,7 +101,15 @@ public sealed class IndexCommand
             // Task 5: Use secure enumeration from ProjectScanner
             index.Stats.FilesScanned = ProjectScanner.SafeEnumerateFiles(rathenaPath).Count();
             if (!string.IsNullOrWhiteSpace(patchPath))
-                index.Stats.FilesScanned += ProjectScanner.SafeEnumerateFiles(patchPath).Count();
+            {
+                var patchFiles = ProjectScanner.SafeEnumerateFiles(patchPath).ToList();
+                index.Stats.FilesScanned += patchFiles.Count;
+                index.ClientArchivesFound = patchFiles
+                    .Count(file => Path.GetExtension(file).Equals(".grf", StringComparison.OrdinalIgnoreCase));
+                index.ClientAssetLookupMode = index.ClientArchivesFound > 0
+                    ? "loose-files-plus-client-archives"
+                    : "loose-files-only";
+            }
 
             var sw = Stopwatch.StartNew();
 

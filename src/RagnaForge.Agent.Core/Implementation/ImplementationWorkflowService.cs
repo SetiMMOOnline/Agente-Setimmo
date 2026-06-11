@@ -390,6 +390,7 @@ public sealed class ImplementationWorkflowService
 
             var currentContent = File.Exists(resolved.FullPath) ? File.ReadAllText(resolved.FullPath) : null;
             var semanticPlan = BuildSemanticPatchPlan(request, capability, currentContent, resolved.FullPath);
+            ApplyOperationalProfile(context.Safety, semanticPlan);
             if (semanticPlan.TargetContent is null || !semanticPlan.PatchQuality.Valid)
                 return BuildNeedsCodexRepairOutput(operationName, context, request, resolved, capability, semanticPlan);
 
@@ -450,14 +451,15 @@ public sealed class ImplementationWorkflowService
                     request.ContentFilePath
                 },
                 Status = persist ? "planned" : "draft",
-                SupervisionMode = "codex-supervised",
+                GovernanceProfile = context.Safety.GetNormalizedOperationProfile(),
+                SupervisionMode = semanticPlan.RequiresCodexReview ? "codex-supervised" : "self-governed",
                 GeneratedBy = "setimmo",
                 RequiresCodexReview = semanticPlan.RequiresCodexReview,
                 CodexReviewStatus = semanticPlan.RequiresCodexReview ? "pending" : "not_required",
                 SemanticConfidence = semanticPlan.SemanticConfidence,
                 PatchQuality = semanticPlan.PatchQuality,
                 RiskLevel = semanticPlan.RiskLevel,
-                CanAutoApply = !semanticPlan.RequiresCodexReview && semanticPlan.SemanticConfidence >= 0.9,
+                CanAutoApply = CanAutoApply(semanticPlan, context.Safety),
                 NeedsCodexRepair = semanticPlan.NeedsCodexRepair,
                 ContextPackPath = BuildContextPackPointer(semanticPlan.Intent),
                 Applied = false,
@@ -493,7 +495,9 @@ public sealed class ImplementationWorkflowService
                 ? $"Implementation dry-run prepared for {resolved.DisplayPath}."
                 : $"Implementation plan prepared for {resolved.DisplayPath}.";
             output.NextRequiredAction = persist
-                ? governance.ApplyEnabled ? "apply_implement" : governance.RecommendedAction
+                ? semanticPlan.NeedsCodexRepair ? "codex_repair"
+                    : semanticPlan.RequiresCodexReview ? "codex_review"
+                    : governance.ApplyEnabled ? "apply_implement" : governance.RecommendedAction
                 : "run_dry_run_implement";
             output.Data = new
             {
@@ -505,9 +509,10 @@ public sealed class ImplementationWorkflowService
                 language = capability.Key,
                 action,
                 persisted = persist,
+                governanceProfile = context.Safety.GetNormalizedOperationProfile(),
                 diffPreview,
                 issues,
-                supervision = BuildSupervisionMetadata(semanticPlan, persist),
+                supervision = BuildSupervisionMetadata(semanticPlan, persist, context.Safety),
                 validation = new
                 {
                     safeForReadOnlyWork = governance.SafeForReadOnlyWork,
@@ -525,7 +530,7 @@ public sealed class ImplementationWorkflowService
                 semanticConfidence = semanticPlan.SemanticConfidence,
                 patchQuality = semanticPlan.PatchQuality,
                 riskLevel = semanticPlan.RiskLevel,
-                canAutoApply = !semanticPlan.RequiresCodexReview && semanticPlan.SemanticConfidence >= 0.9,
+                canAutoApply = CanAutoApply(semanticPlan, context.Safety),
                 governance
             };
         }
@@ -562,7 +567,7 @@ public sealed class ImplementationWorkflowService
             Workspace = resolved.Workspace,
             Language = capability.Key,
             Instruction = request.Instruction,
-            Supervision = BuildSupervisionMetadata(semanticPlan, persist: true),
+            Supervision = BuildSupervisionMetadata(semanticPlan, persist: true, context.Safety),
             Files =
             [
                 new RollbackFileEntry
@@ -691,25 +696,30 @@ public sealed class ImplementationWorkflowService
         Advice = ["Ask Codex to produce a semantic patch."]
     };
 
-    private static OperationSupervisionMetadata BuildSupervisionMetadata(SemanticPatchPlan semanticPlan, bool persist) => new()
+    private static OperationSupervisionMetadata BuildSupervisionMetadata(SemanticPatchPlan semanticPlan, bool persist, SafetyConfig safety) => new()
     {
-        SupervisionMode = "codex-supervised",
+        SupervisionMode = semanticPlan.RequiresCodexReview ? "codex-supervised" : "self-governed",
+        GovernanceProfile = safety.GetNormalizedOperationProfile(),
         GeneratedBy = "setimmo",
         ReviewedBy = null,
         RequiresCodexReview = semanticPlan.RequiresCodexReview,
         CodexReviewStatus = semanticPlan.RequiresCodexReview ? "pending" : "not_required",
         SemanticConfidence = semanticPlan.SemanticConfidence,
+        CodexReviewThreshold = safety.GetCodexReviewThreshold(),
+        AutoApplyThreshold = safety.GetAutoApplyThreshold(),
         PatchQuality = semanticPlan.PatchQuality,
         RiskLevel = semanticPlan.RiskLevel,
-        CanAutoApply = !semanticPlan.RequiresCodexReview && semanticPlan.SemanticConfidence >= 0.9,
+        CanAutoApply = CanAutoApply(semanticPlan, safety),
         NeedsCodexRepair = semanticPlan.NeedsCodexRepair,
         RollbackAvailable = persist && semanticPlan.PatchQuality.Valid,
         ContextPackPath = BuildContextPackPointer(semanticPlan.Intent),
         OperationScopedAuthorization = new
         {
-            safeForApply = false,
-            canApply = false,
-            reason = "Operation still requires validation, rollback, and review gates before apply."
+            safeForApply = !semanticPlan.NeedsCodexRepair && !semanticPlan.RequiresCodexReview,
+            canApply = CanAutoApply(semanticPlan, safety),
+            reason = semanticPlan.RequiresCodexReview
+                ? "Operation still requires a review gate before apply."
+                : "Operation is locally eligible for apply inside writable roots after the usual validation and confirmation gates."
         }
     };
 
@@ -721,7 +731,7 @@ public sealed class ImplementationWorkflowService
         return Path.Combine("context-packs", $"{normalized}-pack.md").Replace('\\', '/');
     }
 
-    private static JsonOutput BuildNeedsCodexRepairOutput(
+    private JsonOutput BuildNeedsCodexRepairOutput(
         string operationName,
         LoadedContext context,
         ImplementationRequest request,
@@ -733,10 +743,12 @@ public sealed class ImplementationWorkflowService
         output.ActiveProfile = context.Paths.ActiveProfile;
         output.ConfigFingerprint = context.Fingerprint;
         output.NextRequiredAction = "codex_repair";
+        var learningPath = FailureLearningRecorder.RecordSemanticPatchFailure(_agentRoot, semanticPlan, request, resolved.DisplayPath);
         output.Data = new
         {
             status = "needs_codex_repair",
             blocker = "non_semantic_patch",
+            learningArtifactPath = learningPath,
             request = new
             {
                 request.Intent,
@@ -749,12 +761,44 @@ public sealed class ImplementationWorkflowService
                 hasContentFile = !string.IsNullOrWhiteSpace(request.ContentFilePath)
             },
             language = capability.Key,
-            supervision = BuildSupervisionMetadata(semanticPlan, persist: false),
+            supervision = BuildSupervisionMetadata(semanticPlan, persist: false, context.Safety),
+            governanceProfile = context.Safety.GetNormalizedOperationProfile(),
             semanticPatch = semanticPlan,
             advice = semanticPlan.Advice
         };
         return output;
     }
+
+    private static void ApplyOperationalProfile(SafetyConfig safety, SemanticPatchPlan semanticPlan)
+    {
+        var profile = safety.GetNormalizedOperationProfile();
+        if (!semanticPlan.PatchQuality.Valid || semanticPlan.NeedsCodexRepair)
+        {
+            semanticPlan.Advice.Insert(0, $"{profile} profile kept Codex supervision because the patch is not semantically safe yet.");
+            return;
+        }
+
+        var threshold = safety.GetCodexReviewThreshold();
+        var canRelaxReview = semanticPlan.SemanticConfidence >= threshold &&
+                             safety.AllowsRiskWithoutCodexReview(semanticPlan.RiskLevel);
+
+        if (canRelaxReview)
+        {
+            semanticPlan.RequiresCodexReview = false;
+            semanticPlan.Advice.Insert(0, $"{profile} profile allowed this validated patch to stay self-governed inside writable roots.");
+        }
+        else
+        {
+            semanticPlan.Advice.Insert(0, $"{profile} profile kept a review gate because confidence/risk is still above the current comfort line.");
+        }
+    }
+
+    private static bool CanAutoApply(SemanticPatchPlan semanticPlan, SafetyConfig safety) =>
+        semanticPlan.PatchQuality.Valid &&
+        !semanticPlan.NeedsCodexRepair &&
+        !semanticPlan.RequiresCodexReview &&
+        semanticPlan.SemanticConfidence >= safety.GetAutoApplyThreshold() &&
+        safety.AllowsRiskWithoutCodexReview(semanticPlan.RiskLevel);
 
     private string? BuildAutoFixContent(string resolvedPath, string? currentContent, LanguageCapability capability)
     {

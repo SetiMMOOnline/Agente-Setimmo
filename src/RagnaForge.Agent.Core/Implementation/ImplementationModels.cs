@@ -52,11 +52,14 @@ public sealed class PatchQualityReport
 public sealed class OperationSupervisionMetadata
 {
     [JsonPropertyName("supervisionMode")] public string SupervisionMode { get; set; } = "codex-supervised";
+    [JsonPropertyName("governanceProfile")] public string GovernanceProfile { get; set; } = "strict";
     [JsonPropertyName("generatedBy")] public string GeneratedBy { get; set; } = "setimmo";
     [JsonPropertyName("reviewedBy")] public string? ReviewedBy { get; set; }
     [JsonPropertyName("requiresCodexReview")] public bool RequiresCodexReview { get; set; } = true;
     [JsonPropertyName("codexReviewStatus")] public string CodexReviewStatus { get; set; } = "pending";
     [JsonPropertyName("semanticConfidence")] public double SemanticConfidence { get; set; }
+    [JsonPropertyName("codexReviewThreshold")] public double CodexReviewThreshold { get; set; }
+    [JsonPropertyName("autoApplyThreshold")] public double AutoApplyThreshold { get; set; }
     [JsonPropertyName("patchQuality")] public PatchQualityReport PatchQuality { get; set; } = new();
     [JsonPropertyName("riskLevel")] public string RiskLevel { get; set; } = "medium";
     [JsonPropertyName("canAutoApply")] public bool CanAutoApply { get; set; }

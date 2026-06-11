@@ -22,6 +22,10 @@ public static class SemanticPatchPlanner
         @"(?is)\b(add|adicionar|inserir)\b\s+(line|linha)\s+['""](?<line>[^'""]+)['""]",
         RegexOptions.Compiled);
 
+    private static readonly Regex CreateInstructionRegex = new(
+        @"(?is)\b(create|criar|generate|gerar|scaffold|bootstrap)\b|\b(new|novo|nova)\b.+\b(file|arquivo|script|component|componente|page|pagina|module|modulo|class|classe|config|configuration)\b",
+        RegexOptions.Compiled);
+
     public static SemanticPatchPlan Plan(
         ImplementationRequest request,
         LanguageCapability capability,
@@ -49,7 +53,24 @@ public static class SemanticPatchPlanner
         }
 
         if (string.IsNullOrWhiteSpace(currentContent))
+        {
+            if (LooksLikeCreateInstruction(request.Instruction))
+            {
+                var content = formatter(resolvedPath, capability.ScaffoldGenerator(BuildInstructionScaffoldRequest(request, resolvedPath)));
+                return BuildPlan(
+                    "instruction-scaffold",
+                    "file",
+                    "Target was missing, so Setimmo generated a scoped scaffold from the creation instruction.",
+                    content,
+                    0.93,
+                    "low",
+                    currentContent,
+                    request,
+                    resolvedPath);
+            }
+
             return NeedsCodexRepair("target_missing_or_empty", "No current content is available and no content/template was supplied.");
+        }
 
         if (string.IsNullOrWhiteSpace(request.Instruction))
             return NeedsCodexRepair("instruction_missing", "No semantic instruction was supplied.");
@@ -176,6 +197,23 @@ public static class SemanticPatchPlanner
         return !string.Equals(updated, currentContent, StringComparison.Ordinal);
     }
 
+    private static bool LooksLikeCreateInstruction(string? instruction) =>
+        !string.IsNullOrWhiteSpace(instruction) && CreateInstructionRegex.IsMatch(instruction);
+
+    private static LanguageScaffoldRequest BuildInstructionScaffoldRequest(ImplementationRequest request, string resolvedPath)
+    {
+        var stem = Path.GetFileNameWithoutExtension(resolvedPath);
+        var normalizedStem = string.IsNullOrWhiteSpace(stem) ? "GeneratedContent" : stem;
+        return new LanguageScaffoldRequest
+        {
+            TargetPath = resolvedPath,
+            Template = "default",
+            Title = request.Title ?? normalizedStem,
+            Name = request.Name ?? normalizedStem,
+            Description = request.Description ?? request.Instruction
+        };
+    }
+
     private static SemanticPatchPlan BuildPlan(
         string intent,
         string targetKind,
@@ -240,6 +278,9 @@ public static class PatchQualityGate
         if (after.Contains("Instruction noted", StringComparison.OrdinalIgnoreCase))
             AddBlocker(report, "instruction_noted_patch", "Instruction-noted placeholder patches are blocked.");
 
+        if (ContainsPlaceholderImplementation(after))
+            AddBlocker(report, "placeholder_implementation", "Placeholder implementations are blocked.");
+
         if (before is not null && string.Equals(before, after, StringComparison.Ordinal))
             AddBlocker(report, "empty_diff", "Patch does not change target content.");
 
@@ -300,6 +341,21 @@ public static class PatchQualityGate
             ".md" => line.StartsWith("<!--") || line.StartsWith("TODO", StringComparison.OrdinalIgnoreCase),
             _ => false
         };
+    }
+
+    private static bool ContainsPlaceholderImplementation(string content)
+    {
+        var patterns = new[]
+        {
+            "throw new NotImplementedException",
+            "TODO: implement",
+            "return null;",
+            "return default;",
+            "not implemented",
+            "placeholder"
+        };
+
+        return patterns.Any(pattern => content.Contains(pattern, StringComparison.OrdinalIgnoreCase));
     }
 }
 

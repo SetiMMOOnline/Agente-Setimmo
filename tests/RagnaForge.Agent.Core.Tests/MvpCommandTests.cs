@@ -340,6 +340,98 @@ public class MvpCommandTests : IDisposable
     }
 
     [Fact]
+    public void ValidateMaps_WarnsWhenNoLooseClientFilesAndNoClientArchivesExist()
+    {
+        var index = new EntityIndex
+        {
+            ClientArchivesFound = 0,
+            Maps =
+            [
+                new MapEntry
+                {
+                    Name = "prontera",
+                    Source = "server",
+                    SourceFile = "db/map_index.txt"
+                }
+            ]
+        };
+
+        var issues = ValidateCommand.ValidateMaps(index);
+
+        Assert.Contains(issues, issue => issue.Code == "MAP_NO_CLIENT_FILES");
+    }
+
+    [Fact]
+    public void ValidateMaps_DoesNotWarnNoClientFilesWhenClientArchivesExist()
+    {
+        var index = new EntityIndex
+        {
+            ClientArchivesFound = 1,
+            ClientAssetLookupMode = "loose-files-plus-client-archives",
+            Maps =
+            [
+                new MapEntry
+                {
+                    Name = "prontera",
+                    Source = "server",
+                    SourceFile = "db/map_index.txt"
+                }
+            ]
+        };
+
+        var issues = ValidateCommand.ValidateMaps(index);
+
+        Assert.DoesNotContain(issues, issue => issue.Code == "MAP_NO_CLIENT_FILES");
+    }
+
+    [Fact]
+    public void ValidateMaps_WarnsIncompleteLooseClientTrioWhenNoClientArchivesExist()
+    {
+        var index = new EntityIndex
+        {
+            ClientArchivesFound = 0,
+            Maps =
+            [
+                new MapEntry
+                {
+                    Name = "custom_map",
+                    Source = "both",
+                    HasRsw = true,
+                    HasGat = true
+                }
+            ]
+        };
+
+        var issues = ValidateCommand.ValidateMaps(index);
+
+        Assert.Contains(issues, issue => issue.Code == "MAP_INCOMPLETE_CLIENT");
+    }
+
+    [Fact]
+    public void ValidateMaps_DoesNotWarnIncompleteLooseClientTrioWhenClientArchivesExist()
+    {
+        var index = new EntityIndex
+        {
+            ClientArchivesFound = 1,
+            ClientAssetLookupMode = "loose-files-plus-client-archives",
+            Maps =
+            [
+                new MapEntry
+                {
+                    Name = "custom_map",
+                    Source = "both",
+                    HasRsw = true,
+                    HasGat = true
+                }
+            ]
+        };
+
+        var issues = ValidateCommand.ValidateMaps(index);
+
+        Assert.DoesNotContain(issues, issue => issue.Code == "MAP_INCOMPLETE_CLIENT");
+    }
+
+    [Fact]
     public void ValidateCommand_DoesNotModifyFiles()
     {
         new IndexCommand(_configDir, _agentRoot, "entities").Execute();

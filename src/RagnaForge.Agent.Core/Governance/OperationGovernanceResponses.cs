@@ -7,7 +7,7 @@ public static class OperationGovernanceResponses
     public static JsonOutput CreateApplyUnavailable() =>
         CreateUnavailable(
             "apply",
-            "Use 'apply implement --operation <id> --confirm' after a validated dry-run. Direct apply without an operation remains unavailable.",
+            "Direct apply is not the operational path. Prepare a concrete operation with plan/dry-run, then use 'apply implement --operation <id> --confirm'.",
             OperationGovernanceProfiles.EvaluateApplyRequestPreview(),
             nextRequiredAction: "run_dry_run_implement",
             applyRequested: true,
@@ -16,7 +16,7 @@ public static class OperationGovernanceResponses
     public static JsonOutput CreateRollbackUnavailable() =>
         CreateUnavailable(
             "rollback",
-            "Use 'rollback --id <id> --confirm' only for an applied implementation operation. Direct rollback without an operation remains unavailable.",
+            "Direct rollback is not the operational path. Select an applied operation and use 'rollback --id <id> --confirm'.",
             OperationGovernanceProfiles.EvaluateRollbackRequestPreview(),
             nextRequiredAction: "select_applied_operation",
             applyRequested: false,

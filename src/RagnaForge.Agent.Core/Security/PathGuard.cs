@@ -5,7 +5,7 @@ namespace RagnaForge.Agent.Core.Security;
 /// blocking path traversal, blocking .lub editing, and ensuring
 /// GRF repository stays read-only.
 ///
-/// All paths come from the active profile — never hardcoded.
+/// All paths come from the active profile and are never hardcoded.
 /// </summary>
 public sealed class PathGuard
 {
@@ -41,7 +41,6 @@ public sealed class PathGuard
     {
         if (string.IsNullOrWhiteSpace(path)) return true;
 
-        // Check for explicit .. segments
         var segments = path.Split(
             [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
             StringSplitOptions.RemoveEmptyEntries);
@@ -129,12 +128,8 @@ public sealed class PathGuard
 
     /// <summary>
     /// Validate that the active profile has safe path configuration.
-    /// Uses containment checks (not just exact equality) to detect:
-    /// - grfRepositoryPath inside any writableRoot (by containment)
-    /// - grfRepositoryPath not covered by any readOnlyRoot (by containment)
-    /// - writableRoot containing a readOnlyRoot (dangerous — would allow writing inside read-only)
-    /// - readOnlyRoot containing a writableRoot (conflicting — read-only covers writable area)
-    /// - path traversal in any configured path
+    /// A writable root may contain a narrower read-only protected island.
+    /// Exact overlap remains invalid, and GRF must remain protected by read-only roots.
     /// </summary>
     public static List<string> EnsureProfileIsSafe(
         Configuration.ProfileConfig profile)
@@ -149,19 +144,27 @@ public sealed class PathGuard
         var normalizedWritable = profile.WritableRoots.Select(Normalize).ToList();
         var normalizedReadOnly = profile.ReadOnlyRoots.Select(Normalize).ToList();
 
-        // GRF repo must be covered by at least one read-only root (containment)
         if (!string.IsNullOrEmpty(normalizedGrf) &&
             !normalizedReadOnly.Any(r => IsContainedIn(normalizedGrf, r)))
         {
             issues.Add($"grfRepositoryPath '{profile.GrfRepositoryPath}' is not in readOnlyRoots.");
         }
 
-        // GRF repo must NOT be inside any writable root (containment)
+        var grfProtectedByReadOnly = !string.IsNullOrEmpty(normalizedGrf) &&
+                                     normalizedReadOnly.Any(r => IsContainedIn(normalizedGrf, r));
+
         if (!string.IsNullOrEmpty(normalizedGrf))
         {
             foreach (var wr in normalizedWritable)
             {
-                if (IsContainedIn(normalizedGrf, wr))
+                if (normalizedGrf.Equals(wr, StringComparison.OrdinalIgnoreCase))
+                {
+                    issues.Add(
+                        $"grfRepositoryPath '{profile.GrfRepositoryPath}' exactly overlaps writableRoot '{wr}'. This must NOT happen.");
+                    break;
+                }
+
+                if (IsContainedIn(normalizedGrf, wr) && !grfProtectedByReadOnly)
                 {
                     issues.Add(
                         $"grfRepositoryPath '{profile.GrfRepositoryPath}' is contained within writableRoot '{wr}'. This must NOT happen.");
@@ -170,20 +173,17 @@ public sealed class PathGuard
             }
         }
 
-        // Detect writable root containing a read-only root (dangerous containment overlap)
         foreach (var wr in normalizedWritable)
         {
             foreach (var ro in normalizedReadOnly)
             {
-                // Writable contains read-only: dangerous — allows write to read-only area
-                if (IsContainedIn(ro, wr))
+                if (wr.Equals(ro, StringComparison.OrdinalIgnoreCase))
                 {
                     issues.Add(
-                        $"writableRoot '{wr}' contains readOnlyRoot '{ro}'. This overlap is dangerous.");
+                        $"writableRoot '{wr}' exactly overlaps readOnlyRoot '{ro}'. This overlap is unsafe.");
                 }
 
-                // Read-only contains writable: conflicting — would block writes to writable area
-                if (IsContainedIn(wr, ro))
+                if (!wr.Equals(ro, StringComparison.OrdinalIgnoreCase) && IsContainedIn(wr, ro))
                 {
                     issues.Add(
                         $"readOnlyRoot '{ro}' contains writableRoot '{wr}'. This overlap is conflicting.");
@@ -191,7 +191,6 @@ public sealed class PathGuard
             }
         }
 
-        // Check for traversal in all paths
         var allPaths = new[]
         {
             profile.RagnaforgeMainProjectPath,

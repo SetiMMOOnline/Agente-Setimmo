@@ -30,9 +30,16 @@ public sealed class FieldTestHarnessTests : IDisposable
         using var document = JsonDocument.Parse(json);
         var root = document.RootElement;
 
-        Assert.Equal(6, root.GetProperty("total").GetInt32());
-        Assert.Equal(6, root.GetProperty("passed").GetInt32());
+        Assert.True(root.GetProperty("total").GetInt32() >= 13);
+        Assert.Equal(root.GetProperty("total").GetInt32(), root.GetProperty("passed").GetInt32());
         Assert.Equal(0, root.GetProperty("failed").GetInt32());
+        var languages = root.GetProperty("fixturesRepresented").EnumerateArray().Select(item => item.GetString()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("html", languages);
+        Assert.Contains("php", languages);
+        Assert.Contains("java", languages);
+        Assert.Contains("c", languages);
+        Assert.Contains("cpp", languages);
+        Assert.Contains("node", languages);
         Assert.True(root.GetProperty("writesConfinedToSandbox").GetBoolean());
         Assert.False(root.GetProperty("realProjectWrites").GetBoolean());
         Assert.False(root.GetProperty("shellExecuted").GetBoolean());

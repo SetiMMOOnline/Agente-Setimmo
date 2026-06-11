@@ -120,6 +120,12 @@ public static class Program
                 return RunGolden(args, agentRoot);
             case "field":
                 return RunField(args, agentRoot);
+            case "eval":
+                return RunEval(args, agentRoot);
+            case "observability":
+                return RunObservability(args, agentRoot);
+            case "openai":
+                return RunOpenAi(args, agentRoot);
 
             case "apply":
                 return RunApply(args, configDir, agentRoot);
@@ -439,6 +445,25 @@ public static class Program
         return Emit(agentRoot, new FieldTestCommand(agentRoot, noun, verb, keepSandbox).Execute(), "field-test");
     }
 
+    private static int RunEval(string[] args, string agentRoot)
+    {
+        var sub = GetArg(args, 1) ?? "run";
+        return Emit(agentRoot, new AgentEvalCommand(agentRoot, sub).Execute(), $"eval-{sub}");
+    }
+
+    private static int RunObservability(string[] args, string agentRoot)
+    {
+        var sub = GetArg(args, 1) ?? "report";
+        return Emit(agentRoot, new ObservabilityCommand(agentRoot, sub).Execute(), $"observability-{sub}");
+    }
+
+    private static int RunOpenAi(string[] args, string agentRoot)
+    {
+        var sub = GetArg(args, 1) ?? "review";
+        var operationId = GetFlagValue(args, "--operation") ?? GetFlagValue(args, "--id");
+        return Emit(agentRoot, new OpenAiReviewCommand(agentRoot, sub, operationId).Execute(), $"openai-{sub}");
+    }
+
     private static int RunApply(string[] args, string configDir, string agentRoot)
     {
         var sub = GetArg(args, 1) ?? string.Empty;
@@ -658,6 +683,9 @@ public static class Program
           lessons list
           golden scenarios run
           field test run                    Run safe stack fixtures in an agent sandbox
+          eval run                          Run local behavior evals for Setimmo
+          observability report              Summarize logs, operations and learning artifacts
+          openai review --operation <id>    Prepare optional OpenAI reviewer contract
           production plan --operation <id>    Evaluate formal production readiness
           production approve --operation <id> --approver <name> --reason <text>
           production apply --operation <id>   Apply only after approval, diff hash and rollback checks

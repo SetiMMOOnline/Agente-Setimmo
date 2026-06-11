@@ -72,7 +72,7 @@ public sealed class HealthCommand
                 canon,
                 validationSummary,
                 applyEngineImplemented: true,
-                rollbackEngineImplemented: false);
+                rollbackEngineImplemented: true);
 
             output.Summary = "Operational health summary is ready.";
             output.SafeForAutomation = status.Ok && doctor.Ok && governance.SafeForReadOnlyWork;
@@ -148,7 +148,7 @@ public sealed class HealthCommand
                 safety = new
                 {
                     applyBlocked = true,
-                    rollbackRealBlocked = true,
+                    rollbackRealBlocked = false,
                     grfReadOnly = true,
                     lubEditingBlocked = safetyConfig.BlockLubEditing,
                     canonEnabled = canon.CanonEnabled,

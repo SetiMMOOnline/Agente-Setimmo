@@ -65,8 +65,10 @@ public sealed class StatusCommand
             foreach (var (name, path) in pathChecks)
             {
                 var exists = !string.IsNullOrWhiteSpace(path) && Directory.Exists(path);
-                var isWritable = !string.IsNullOrWhiteSpace(path) && guard.IsInsideWritableRoot(path);
                 var isReadOnly = !string.IsNullOrWhiteSpace(path) && guard.IsInsideReadOnlyRoot(path);
+                var isWritable = !string.IsNullOrWhiteSpace(path) &&
+                                 guard.IsInsideWritableRoot(path) &&
+                                 !isReadOnly;
 
                 pathStatuses.Add(new
                 {
@@ -133,6 +135,10 @@ public sealed class StatusCommand
                 },
                 safety = new
                 {
+                    operationProfile = safetyConfig.GetNormalizedOperationProfile(),
+                    operationProfileDescription = safetyConfig.DescribeOperationProfile(),
+                    codexReviewThreshold = safetyConfig.GetCodexReviewThreshold(),
+                    autoApplyThreshold = safetyConfig.GetAutoApplyThreshold(),
                     safetyConfig.RequireDryRunBeforeApply,
                     safetyConfig.RequireDiffBeforeApply,
                     safetyConfig.RequireExplicitConfirmation,

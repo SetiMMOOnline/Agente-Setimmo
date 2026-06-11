@@ -161,6 +161,30 @@ public class ConfigLoaderTests : IDisposable
         Assert.True(safety.RequireExplicitConfirmation);
     }
 
+    [Fact]
+    public void SafetyConfig_NormalizesOperationProfile()
+    {
+        WriteValidConfigs();
+        WriteConfig("safety.json", new
+        {
+            operationProfile = "local",
+            requireDryRunBeforeApply = true,
+            requireDiffBeforeApply = true,
+            requireValidationBeforeApply = true,
+            requireExplicitConfirmation = true,
+            blockOriginalGrfWrite = true,
+            blockLubEditing = true,
+            invalidateCacheOnPathChange = true,
+            cacheMustMatchActiveProfile = true
+        });
+
+        var loader = new ConfigLoader(_tempDir);
+        var safety = loader.LoadSafetyConfig();
+
+        Assert.Equal("standalone-relaxed", safety.GetNormalizedOperationProfile());
+        Assert.Equal(0.72, safety.GetCodexReviewThreshold());
+    }
+
     // --- Test: ConfigLoader loads paths from activeProfile ---
     [Fact]
     public void GetActiveProfile_ReturnsCorrectProfile()

@@ -83,6 +83,8 @@ public sealed class EntityIndex
     [JsonPropertyName("configFingerprint")] public string ConfigFingerprint { get; set; } = string.Empty;
     [JsonPropertyName("sourcePaths")] public List<string> SourcePaths { get; set; } = [];
     [JsonPropertyName("stats")] public EntityIndexStats Stats { get; set; } = new();
+    [JsonPropertyName("clientArchivesFound")] public int ClientArchivesFound { get; set; }
+    [JsonPropertyName("clientAssetLookupMode")] public string ClientAssetLookupMode { get; set; } = "loose-files-only";
     [JsonPropertyName("warnings")] public List<string> Warnings { get; set; } = [];
     [JsonPropertyName("items")] public List<ItemEntry> Items { get; set; } = [];
     [JsonPropertyName("npcs")] public List<NpcEntry> Npcs { get; set; } = [];
@@ -135,6 +137,7 @@ public sealed class OperationManifest
     [JsonPropertyName("agentVersion")] public string AgentVersion { get; set; } = RagnaForge.Agent.Core.AgentVersion.Current;
     [JsonPropertyName("activeProfile")] public string ActiveProfile { get; set; } = string.Empty;
     [JsonPropertyName("configFingerprint")] public string ConfigFingerprint { get; set; } = string.Empty;
+    [JsonPropertyName("governanceProfile")] public string GovernanceProfile { get; set; } = "strict";
     [JsonPropertyName("entityType")] public string EntityType { get; set; } = string.Empty;
     [JsonPropertyName("operationType")] public string OperationType { get; set; } = "dry-run";
     [JsonPropertyName("input")] public object? Input { get; set; }

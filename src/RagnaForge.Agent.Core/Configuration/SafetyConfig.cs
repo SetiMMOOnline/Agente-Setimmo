@@ -8,6 +8,9 @@ namespace RagnaForge.Agent.Core.Configuration;
 /// </summary>
 public sealed class SafetyConfig
 {
+    [JsonPropertyName("operationProfile")]
+    public string OperationProfile { get; set; } = "strict";
+
     [JsonPropertyName("requireDryRunBeforeApply")]
     public bool RequireDryRunBeforeApply { get; set; } = true;
 
@@ -52,4 +55,63 @@ public sealed class SafetyConfig
 
     [JsonPropertyName("cacheMustMatchActiveProfile")]
     public bool CacheMustMatchActiveProfile { get; set; } = true;
+
+    public string GetNormalizedOperationProfile() => NormalizeOperationProfile(OperationProfile);
+
+    public static string NormalizeOperationProfile(string? value)
+    {
+        var normalized = value?.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "standalone" or "standalone-relaxed" or "standalone_relaxed" => "standalone-relaxed",
+            "api" or "api-restricted" or "api_restricted" => "api-restricted",
+            "production" or "production-strict" or "production_strict" => "production-strict",
+            "local" or "local-dev" or "local_dev" => "standalone-relaxed",
+            "sandbox" => "sandbox",
+            _ => "api-restricted"
+        };
+    }
+
+    public double GetCodexReviewThreshold() => GetNormalizedOperationProfile() switch
+    {
+        "sandbox" => 0.68,
+        "standalone-relaxed" => 0.72,
+        "api-restricted" => 0.86,
+        "production-strict" => 1.0,
+        _ => 0.90
+    };
+
+    public double GetAutoApplyThreshold() => GetNormalizedOperationProfile() switch
+    {
+        "sandbox" => 0.68,
+        "standalone-relaxed" => 0.72,
+        "api-restricted" => 0.95,
+        "production-strict" => 1.0,
+        _ => 0.90
+    };
+
+    public bool AllowsRiskWithoutCodexReview(string? riskLevel)
+    {
+        var risk = string.IsNullOrWhiteSpace(riskLevel)
+            ? "unknown"
+            : riskLevel.Trim().ToLowerInvariant();
+
+        return GetNormalizedOperationProfile() switch
+        {
+            "sandbox" => risk is "low" or "medium",
+            "standalone-relaxed" => risk is "low" or "medium",
+            "api-restricted" => risk == "low",
+            "production-strict" => false,
+            _ => risk == "low"
+        };
+    }
+
+    public string DescribeOperationProfile() => GetNormalizedOperationProfile() switch
+    {
+        "sandbox" => "Sandbox profile: low and medium risk semantic patches may flow with less Codex friction inside writable roots.",
+        "standalone-relaxed" => "Standalone-relaxed profile: trusted local operator mode for low and medium risk semantic patches inside approved writable roots.",
+        "api-restricted" => "API-restricted profile: public API/UI surfaces stay conservative and require review for medium or higher risk.",
+        "production-strict" => "Production-strict profile: no auto-apply; human approval, rollback, audit, diff and Codex review are required.",
+        _ => "Strict profile: medium and high risk patches stay Codex-supervised."
+    };
 }

@@ -158,6 +158,8 @@ public sealed class DoctorCommand
                 safetyConfig.InvalidateCacheOnPathChange, "invalidateCacheOnPathChange");
             ValidateSafetyGate(checks, output, "safety.cacheMustMatchActiveProfile",
                 safetyConfig.CacheMustMatchActiveProfile, "cacheMustMatchActiveProfile");
+            checks.Add(Pass("safety.operationProfile",
+                $"{safetyConfig.GetNormalizedOperationProfile()} - {safetyConfig.DescribeOperationProfile()}"));
 
             var logsDir = Path.Combine(effectiveAgentRoot, "logs");
             if (Directory.Exists(logsDir))

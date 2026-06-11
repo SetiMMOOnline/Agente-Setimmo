@@ -56,7 +56,7 @@ public sealed class ValidateCommand
                     canon,
                     cacheSummary,
                     applyEngineImplemented: true,
-                    rollbackEngineImplemented: false);
+                    rollbackEngineImplemented: true);
 
                 output = JsonOutput.Error(
                     "validate",
@@ -120,7 +120,7 @@ public sealed class ValidateCommand
                 canon,
                 decisionSummary,
                 applyEngineImplemented: true,
-                rollbackEngineImplemented: false);
+                rollbackEngineImplemented: true);
             var errors = issues.Count(i => i.Severity is "error" or "critical");
             var warnings = issues.Count(i => i.Severity == "warning");
 
@@ -361,6 +361,9 @@ public sealed class ValidateCommand
         {
             if (map.Source == "server" && !map.HasRsw && !map.HasGnd && !map.HasGat)
             {
+                if (index.ClientArchivesFound > 0)
+                    continue;
+
                 issues.Add(new ValidationIssue
                 {
                     Severity = "warning",
@@ -373,7 +376,7 @@ public sealed class ValidateCommand
                 });
             }
 
-            if (map.HasRsw && (!map.HasGnd || !map.HasGat))
+            if (map.HasRsw && (!map.HasGnd || !map.HasGat) && index.ClientArchivesFound == 0)
             {
                 issues.Add(new ValidationIssue
                 {

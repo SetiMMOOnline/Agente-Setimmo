@@ -205,6 +205,90 @@ public sealed class ImplementationWorkflowTests : IDisposable
     }
 
     [Fact]
+    public void DryRunImplement_LocalDevProfile_RelaxesMediumRiskReview()
+    {
+        RewriteSafetyConfig("local-dev");
+
+        var targetPath = Path.Combine(_agentRoot, "temp", "settings.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+        File.WriteAllText(targetPath, "{\"enabled\":false,\"name\":\"demo\"}");
+
+        var request = new ImplementationRequest
+        {
+            Workspace = "agent",
+            TargetPath = "temp/settings.json",
+            LanguageHint = "json",
+            Instruction = "set enabled to true"
+        };
+
+        var result = new DryRunImplementCommand(_configDir, _agentRoot, request).Execute();
+
+        Assert.True(result.Ok);
+        var data = ToElement(result.Data);
+        Assert.Equal("standalone-relaxed", data.GetProperty("governanceProfile").GetString());
+        Assert.False(data.GetProperty("supervision").GetProperty("requiresCodexReview").GetBoolean());
+        Assert.True(data.GetProperty("canAutoApply").GetBoolean());
+    }
+
+    [Fact]
+    public void DryRunImplement_CreatesMissingFileFromCreateInstruction_AndSupportsApplyRollback()
+    {
+        RewriteSafetyConfig("local-dev");
+
+        var request = new ImplementationRequest
+        {
+            Workspace = "agent",
+            TargetPath = "temp/validation-smoke.ps1",
+            LanguageHint = "powershell",
+            Instruction = "Create a safe smoke script that confirms the implementation validation path."
+        };
+
+        var result = new DryRunImplementCommand(_configDir, _agentRoot, request).Execute();
+
+        Assert.True(result.Ok);
+        var data = ToElement(result.Data);
+        Assert.Equal("create", data.GetProperty("action").GetString());
+        Assert.Equal("planned", data.GetProperty("status").GetString());
+        Assert.Equal("semantic", data.GetProperty("patchQuality").GetProperty("classification").GetString());
+        Assert.True(data.GetProperty("canAutoApply").GetBoolean());
+
+        var targetPath = Path.Combine(_agentRoot, "temp", "validation-smoke.ps1");
+        Assert.False(File.Exists(targetPath));
+
+        var apply = new ApplyImplementCommand(_configDir, _agentRoot, result.OperationId, confirm: true).Execute();
+        Assert.True(apply.Ok);
+        Assert.True(File.Exists(targetPath));
+
+        var contents = File.ReadAllText(targetPath);
+        Assert.Contains("Write-Host", contents, StringComparison.Ordinal);
+
+        var rollback = new RollbackCommand(_configDir, _agentRoot, result.OperationId, list: false, dryRun: false, confirm: true).Execute();
+        Assert.True(rollback.Ok);
+        Assert.False(File.Exists(targetPath));
+    }
+
+    [Fact]
+    public void DryRunImplement_MissingTargetWithoutCreateIntent_StillRequiresCodexRepair()
+    {
+        RewriteSafetyConfig("local-dev");
+
+        var request = new ImplementationRequest
+        {
+            Workspace = "agent",
+            TargetPath = "temp/replace-missing.ps1",
+            LanguageHint = "powershell",
+            Instruction = "replace 'old' with 'new'"
+        };
+
+        var result = new DryRunImplementCommand(_configDir, _agentRoot, request).Execute();
+
+        Assert.False(result.Ok);
+        var data = ToElement(result.Data);
+        Assert.Equal("needs_codex_repair", data.GetProperty("status").GetString());
+        Assert.Equal("non_semantic_patch", data.GetProperty("blocker").GetString());
+    }
+
+    [Fact]
     public void ReviewCodeCommand_ReportsSecretsAndTodos()
     {
         var targetPath = Path.Combine(_mainProjectDir, "src", "danger.js");
@@ -273,9 +357,16 @@ public sealed class ImplementationWorkflowTests : IDisposable
                 }
             }, options));
 
+        RewriteSafetyConfig("strict");
+    }
+
+    private void RewriteSafetyConfig(string operationProfile)
+    {
+        var options = new JsonSerializerOptions { WriteIndented = true };
         File.WriteAllText(Path.Combine(_configDir, "safety.json"),
             JsonSerializer.Serialize(new
             {
+                operationProfile,
                 requireDryRunBeforeApply = true,
                 requireDiffBeforeApply = true,
                 requireValidationBeforeApply = true,

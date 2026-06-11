@@ -39,6 +39,10 @@ O agente consegue revisar codigo, gerar planos, produzir diffs controlados, apli
 - `safeForApply`, `canApply`, `applyEnabled` e `rollbackEnabled` ficam `false` em status globais
 - `safeForApply` so pode ser `true` dentro de uma operacao concreta com plano, diff, rollback, validadores e revisao quando exigida
 - `safeForProductionApply` so fica `true` para uma operacao especifica apos aprovacao formal vinculada ao hash do diff
+- `operationProfile` controla o atrito do standalone:
+  - `strict`: medium/high risk continua em `codex-supervised`
+  - `local-dev`: low e parte de medium risk podem seguir com menos friccao dentro de `writableRoots`
+  - `sandbox`: parecido com `local-dev`, mas pensado para fixture/sandbox do proprio agente
 - MCP expoe ferramentas read-only e ferramentas de implementacao validator-governed
 - GRF_Extractor e integrado em modo metadata/controlado: inspeciona e prepara saida no `temp` do agente, sem modificar GRFs reais
 - Field Test Harness valida C#, TS/JS, Python, Lua, PowerShell e Shell em sandbox local, com review/plan/dry-run/apply seguro/rollback sem tocar projetos reais

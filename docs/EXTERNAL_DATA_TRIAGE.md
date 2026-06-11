@@ -1,58 +1,85 @@
-# Triagem de Dados Externos (External-Data Triage) — Agente Setimmo
+# Triagem de Dados Externos - Agente Setimmo
 
-Este documento detalha o funcionamento do comando `triage` do Agente Setimmo e analisa a integridade dos dados e as 1084 issues externas detectadas durante a validação.
+Data de atualizacao: 2026-06-11
 
-## 1. O Problema das 1084 Issues
-Durante a execução do comando `validate`, o Agente Setimmo detecta aproximadamente **1084 issues** no banco de dados do rAthena e arquivos do cliente Ragnarok Online.
+Este documento explica como o Agente Setimmo interpreta inconsistencias entre dados rAthena, Patch/client e assets Ragnarok.
 
-Essas issues se dividem em:
-- **1 Erro Real**: `ITEM_DUPLICATE_ID_SERVER` no arquivo `item_db_usable.yml` (ID duplicado no rAthena).
-- **1083 Warnings (Ruído Esperado)**: Principalmente `MAP_NO_CLIENT_FILES` (1078) e `MAP_INCOMPLETE_CLIENT` (5), localizados no arquivo de índice de mapas (`map_index.txt`).
+## Estado Atual
 
-## 2. Por que as 1084 Issues não Bloqueiam o Trabalho Read-Only?
-A governança do Agente Setimmo classifica rigorosamente as falhas com base no seu impacto operacional em três categorias:
+Resultado validado apos a correcao da regra de mapas:
 
-- **`safeForReadOnlyWork` (Audit) = `true`**: O trabalho de auditoria, consulta e visualização das tabelas de itens, monstros, NPCs e preview de frames SPR/ACT é 100% seguro. Erros e warnings em dados legados do rAthena não corrompem nem interferem com a capacidade das IAs de lerem o estado atual dos repositórios locais.
-- **`safeForDryRun` (Simulação) = `true`**: Simular alterações (dry-run) para ver o diff proposto de um novo item ou NPC é permitido. O cálculo de diff ocorre em memória e gera manifests informacionais sem tocar nos arquivos reais.
-- **`safeForApply` (Escrita Direta) = `false`**: Qualquer tentativa de aplicar mudanças reais nos arquivos do rAthena ou Patch do cliente é terminantemente bloqueada enquanto houver erros estruturais ativos, como IDs duplicados de itens.
+- `validate --json`: 0 issues.
+- Erros: 0.
+- Warnings: 0.
+- Escopo `external-data`: 0.
+- Cache de entidades: trusted.
+- Modo de lookup de assets client: `loose-files-plus-client-archives`.
+- GRFs client detectados no Patch: 4.
 
-## 3. Classificação Operacional das Issues (Triage v1)
+## O Que Foi Corrigido
 
-A triagem agrupa e separa os problemas em categorias acionáveis:
+Antes, o validador emitia 1083 warnings de mapas:
 
-| Categoria | Descrição | Bloqueia Read-Only? | Bloqueia Dry-Run? | Bloqueia Apply? |
-|-----------|-----------|----------------------|--------------------|-----------------|
-| **Erro Real (1)** | `ITEM_DUPLICATE_ID_SERVER` in `item_db_usable.yml` | Não | Não | **Sim** ❌ |
-| **Ruído Esperado (1083)** | `MAP_NO_CLIENT_FILES` no índice do servidor | Não | Não | **Sim** ❌ |
+- 1078 `MAP_NO_CLIENT_FILES`.
+- 5 `MAP_INCOMPLETE_CLIENT`.
 
-### O que é o "Ruído Esperado"?
-São warnings de consistência onde mapas cadastrados no rAthena não possuem arquivos visuais equivalentes (.rsw/.gnd/.gat) mapeados na pasta do Patch/cliente. Em servidores customizados ou em desenvolvimento, isso é comum quando se usam bancos de dados padrão do rAthena, mas nem todos os mapas estão ativados ou extraídos no cliente de teste.
+Esses warnings eram falsos positivos no perfil atual porque o cliente possui GRFs no Patch. A ausencia de arquivos soltos em `data/` nao prova ausencia real no cliente quando ha containers GRF disponiveis.
 
-## 4. Como Priorizar e Corrigir os Problemas
+O Setimmo agora registra, durante `index --entities`, se existem GRFs no Patch/client. Quando existem GRFs, a validacao de mapas nao transforma ausencia de arquivos soltos em warning. O agente so deve acusar falta de trio client quando tiver evidencia suficiente, nao por nao conseguir enxergar dentro do container.
 
-Para habilitar a automação completa (`safeForApply = true`), siga os passos abaixo em ordem de prioridade:
+## Regra Atual
 
-### Passo 1: Resolver o Erro Real de ID Duplicado (ITEM_DUPLICATE_ID_SERVER)
-1. Localize a issue indicada no relatório (`item_db_usable.yml`).
-2. Abra o arquivo e altere o ID duplicado do item em conflito para um ID livre ou remova a duplicata legada.
-3. Isso removerá o único blocker crítico estrutural de apply do banco de dados do rAthena.
+### Sem GRF client detectado
 
-### Passo 2: Criar um Baseline de Ignore para o Ruído de Mapas
-Como a ausência de arquivos visuais de mapas padrão (ex: `yuno_fild07`) não é um bug do seu projeto customizado e sim dados legados inativos, você pode:
-1. Criar um baseline de validação informando que esses mapas não devem gerar warnings de consistência.
-2. Mover arquivos visuais (.rsw/.gnd/.gat) correspondentes dos mapas ativados para a pasta do cliente `data/` ou GRF correspondente.
+Se nao houver GRF no Patch/client, o Setimmo usa apenas arquivos soltos como evidencia.
 
-## 5. Como Executar a Triagem Localmente
+Nesse caso:
 
-Você pode rodar a triagem de forma segura e rápida a qualquer momento:
+- mapa do servidor sem `.rsw`, `.gnd` e `.gat` soltos pode gerar `MAP_NO_CLIENT_FILES`;
+- mapa com trio solto parcial pode gerar `MAP_INCOMPLETE_CLIENT`.
 
-### CLI do Agent:
+### Com GRF client detectado
+
+Se houver GRF no Patch/client, o Setimmo nao assume que um mapa esta ausente so porque nao ha arquivo solto correspondente.
+
+Nesse caso:
+
+- `MAP_NO_CLIENT_FILES` nao e emitido somente por ausencia de loose files;
+- `MAP_INCOMPLETE_CLIENT` nao e emitido somente por ausencia de loose files complementares;
+- a validacao permanece conservadora ate existir um indice real de conteudo GRF.
+
+## Limite Conhecido
+
+O Setimmo integrado ainda nao indexa o conteudo interno de GRFs reais. A integracao atual de GRF e metadata-only e preserva containers originais em read-only.
+
+Portanto, a conclusao correta e:
+
+- nao ha warning comprovado no estado atual;
+- nao ha prova automatica de que todos os mapas existem dentro dos GRFs;
+- uma validacao mais forte exige um `GRFLocalIndex` ou ferramenta autorizada de listagem de conteudo GRF sem extracao destrutiva.
+
+## Como Validar
+
+Comando recomendado:
+
 ```powershell
-dotnet run --project src\RagnaForge.Agent.Cli -- triage --external-data --json
+E:\Ragnarok\Projeto\Agente_Setimmo\dist\agente-setimmo\ragnaforge.exe index --entities --json
+E:\Ragnarok\Projeto\Agente_Setimmo\dist\agente-setimmo\ragnaforge.exe validate --json
+E:\Ragnarok\Projeto\Agente_Setimmo\dist\agente-setimmo\ragnaforge.exe health --json
 ```
 
-### MCP Server (AI/Operator integration):
-Chame a tool `ragnaforge_triage` passando `externalDataOnly: true`.
+Resultado esperado:
 
-A triagem gerará um relatório detalhado em Markdown em:
-`logs/reports/external-data-triage-v1.report.md`
+- `validate`: 0 issues.
+- `health`: ok.
+- `cacheTrusted`: true.
+- `trustedCounts`: true.
+
+## Proximo Passo Recomendado
+
+Criar uma etapa futura de `GRFLocalIndex` read-only para listar nomes de arquivos dentro dos GRFs autorizados, sem extrair payload privado e sem escrever em Patch/client. Isso permitiria diferenciar com precisao:
+
+- mapa presente em arquivo solto;
+- mapa presente em GRF;
+- mapa realmente ausente;
+- trio client parcialmente presente.

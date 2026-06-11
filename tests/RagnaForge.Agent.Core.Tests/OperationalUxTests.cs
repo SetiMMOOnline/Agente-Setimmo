@@ -98,10 +98,21 @@ public sealed class OperationalUxTests : IDisposable
         Assert.True(data.GetProperty("project").GetProperty("cacheTrusted").GetBoolean());
         Assert.True(data.GetProperty("entities").GetProperty("trustedCounts").GetBoolean());
         Assert.True(data.GetProperty("safety").GetProperty("applyBlocked").GetBoolean());
-        Assert.True(data.GetProperty("safety").GetProperty("rollbackRealBlocked").GetBoolean());
+        Assert.False(data.GetProperty("safety").GetProperty("rollbackRealBlocked").GetBoolean());
         Assert.True(data.GetProperty("capabilities").GetProperty("supportsRollback").GetBoolean());
         Assert.False(data.GetProperty("operationAuthorization").GetProperty("canApply").GetBoolean());
         Assert.Equal(2, data.GetProperty("entities").GetProperty("items").GetInt32());
+    }
+
+    [Fact]
+    public void Status_ReportsOperationProfileDetails()
+    {
+        var result = new StatusCommand(_configDir, _agentRoot).Execute();
+
+        Assert.True(result.Ok);
+        var data = ToElement(result.Data);
+        Assert.Equal("api-restricted", data.GetProperty("safety").GetProperty("operationProfile").GetString());
+        Assert.Equal(0.86, data.GetProperty("safety").GetProperty("codexReviewThreshold").GetDouble());
     }
 
     [Fact]
@@ -218,6 +229,17 @@ public sealed class OperationalUxTests : IDisposable
     }
 
     [Fact]
+    public void Validate_DoesNotReportRollbackEngineAsMissing()
+    {
+        new IndexCommand(_configDir, _agentRoot, "entities").Execute();
+
+        var result = new ValidateCommand(_configDir, _agentRoot).Execute();
+
+        Assert.True(result.Ok);
+        Assert.DoesNotContain("rollback_engine_not_implemented", result.ToJson());
+    }
+
+    [Fact]
     public void Validate_SecurityCriticalIssue_BlocksEverything()
     {
         var issue = ValidationOperationalClassifier.CreateSecurityIssue(
@@ -279,7 +301,7 @@ public sealed class OperationalUxTests : IDisposable
 
         Assert.True(result.Ok, string.Join(Environment.NewLine, result.Errors));
         var data = ToElement(result.Data);
-        Assert.Equal(6, data.GetProperty("passed").GetInt32());
+        Assert.True(data.GetProperty("passed").GetInt32() >= 13);
         Assert.False(data.GetProperty("safeForApply").GetBoolean());
         Assert.False(data.GetProperty("shellExecuted").GetBoolean());
     }

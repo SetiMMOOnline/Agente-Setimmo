@@ -1,4 +1,5 @@
 {
+  "operationProfile": "local-dev",
   "requireDryRunBeforeApply": true,
   "requireDiffBeforeApply": true,
   "requireValidationBeforeApply": true,

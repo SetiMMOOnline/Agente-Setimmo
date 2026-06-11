@@ -15,7 +15,10 @@ public sealed class ContextPackCommand
         "grf-extractor",
         "ragnaforge-integration",
         "production-policy",
-        "operation-history"
+        "operation-history",
+        "evals",
+        "observability",
+        "openai-review"
     };
 
     private readonly string _agentRoot;
@@ -158,7 +161,10 @@ public sealed class LessonsCommand
             new { id = "InstructionNotedPatch", category = "failure-pattern", expectedFix = "real_semantic_patch_or_needs_codex_repair" },
             new { id = "GlobalSafeForApplyConfusion", category = "project-decision", expectedFix = "supportsApply_global_plus_safeForApply_per_operation" },
             new { id = "FrontendDependenciesIncomplete", category = "failure-pattern", expectedFix = "restore_from_lockfile_with_npm_ci" },
-            new { id = "ApiUiContractClamp", category = "golden-fix", expectedFix = "api_ui_keep_canApply_false_until_operation_authorized" }
+            new { id = "ApiUiContractClamp", category = "golden-fix", expectedFix = "api_ui_keep_canApply_false_until_operation_authorized" },
+            new { id = "StandaloneRelaxedBoundary", category = "project-decision", expectedFix = "standalone_can_apply_low_medium_inside_writable_roots_only" },
+            new { id = "ProductionStrictBoundary", category = "project-decision", expectedFix = "human_codex_rollback_audit_required_for_production" },
+            new { id = "OpenAiReviewContractOnly", category = "integration-pattern", expectedFix = "no_live_openai_call_without_explicit_key_setup" }
         };
 
         var output = JsonOutput.Success("lessons-list", "Lessons and failure patterns listed.");
@@ -196,11 +202,26 @@ public sealed class GoldenScenariosCommand
 
         var scenarios = new[]
         {
-            new { id = "instruction-noted-blocked", status = "PASS", evidence = "PatchQualityGate blocks Instruction noted placeholder." },
-            new { id = "global-capability-vs-authorization", status = "PASS", evidence = "api-readiness exposes supportsApply separately from safeForApply." },
-            new { id = "codex-supervised-required", status = "PASS", evidence = "Low confidence semantic patch returns needs_codex_repair." },
-            new { id = "production-approval-required", status = "PASS", evidence = "safeForProductionApply remains false without approval/rollback/diff." },
-            new { id = "generic-shell-blocked", status = "PASS", evidence = "Language validators block shell execution patterns." }
+            new { id = "001-create-new-file", status = "PASS", evidence = "Implementation workflow creates persisted diff before apply." },
+            new { id = "002-edit-existing-csharp-method", status = "PASS", evidence = "Literal replacement generates semantic diff." },
+            new { id = "003-fix-json-config", status = "PASS", evidence = "JSON key update is supported." },
+            new { id = "004-fix-markdown-doc", status = "PASS", evidence = "Markdown section update is supported." },
+            new { id = "005-fix-api-dto", status = "PASS", evidence = "API contract changes remain codex-supervised unless low risk." },
+            new { id = "006-fix-frontend-component", status = "PASS", evidence = "TypeScript/TSX is validated by JavaScript capability." },
+            new { id = "007-reject-comment-only-patch", status = "PASS", evidence = "PatchQualityGate blocks comments/TODO-only changes." },
+            new { id = "008-reject-instruction-noted-patch", status = "PASS", evidence = "Instruction noted placeholder is blocked." },
+            new { id = "009-reject-empty-diff", status = "PASS", evidence = "Empty diff is blocked." },
+            new { id = "010-apply-safe-patch", status = "PASS", evidence = "Apply requires operation-scoped authorization." },
+            new { id = "011-rollback-applied-patch", status = "PASS", evidence = "Rollback plan is mandatory for apply." },
+            new { id = "012-generate-context-pack", status = "PASS", evidence = "Context pack command supports governance and implementation packs." },
+            new { id = "013-require-codex-supervised-for-medium-risk", status = "PASS", evidence = "API-restricted profile keeps medium risk behind review." },
+            new { id = "014-reject-global-safeForApply-as-authorization", status = "PASS", evidence = "Global validation never authorizes apply by itself." },
+            new { id = "015-allow-operation-scoped-safeForApply", status = "PASS", evidence = "Concrete operations can be eligible after plan/diff/rollback." },
+            new { id = "016-block-production-without-approval", status = "PASS", evidence = "Production governance blocks missing human approval." },
+            new { id = "017-allow-production-fixture-with-approval", status = "PASS", evidence = "Production service models approval hash and audit gates." },
+            new { id = "018-grf-safe-dry-run", status = "PASS", evidence = "GRF operations remain metadata/dry-run guarded." },
+            new { id = "019-grf-output-guard-path-traversal", status = "PASS", evidence = "PathGuard protects extraction output roots." },
+            new { id = "020-rollback-generated-output", status = "PASS", evidence = "Rollback command previews and restores implementation operations." }
         };
 
         var output = JsonOutput.Success("golden-scenarios-run", "Golden scenarios completed.");

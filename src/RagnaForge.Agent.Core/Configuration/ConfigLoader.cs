@@ -79,7 +79,9 @@ public sealed class ConfigLoader
     public SafetyConfig LoadSafetyConfig()
     {
         var path = Path.Combine(_configDir, "safety.json");
-        return LoadAndValidate<SafetyConfig>(path, "safety.json");
+        var config = LoadAndValidate<SafetyConfig>(path, "safety.json");
+        config.OperationProfile = SafetyConfig.NormalizeOperationProfile(config.OperationProfile);
+        return config;
     }
 
     /// <summary>
